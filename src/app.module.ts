@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Users } from './entities/users.entity';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { APP_FILTER } from '@nestjs/core';
         synchronize: true,
       }),
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
