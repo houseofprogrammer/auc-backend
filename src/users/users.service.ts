@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,11 +14,15 @@ import { GenericSuccessResponse } from 'src/common/http-success.response';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(Users) private userRepo: Repository<Users>) {}
+  constructor(
+    @InjectRepository(Users) private userRepo: Repository<Users>,
+    private readonly logger: Logger,
+  ) {}
 
   async findOne(id: number) {
     const user = await this.userRepo.findOne({ where: { id: id } });
     if (!user) {
+      this.logger.error(`User with id: ${id} is not found`, UsersService.name);
       throw new NotFoundException('User not found');
     }
 
@@ -41,8 +46,16 @@ export class UsersService {
         error instanceof QueryFailedError &&
         error.message.includes('duplicate key value')
       ) {
+        this.logger.error(
+          `Duplicate error data with email ${createUserDto.email} and error: ${error.message}`,
+          UsersService.name,
+        );
         throw new ConflictException('Duplicate data');
       } else {
+        this.logger.error(
+          `Something wrong: ${error.message}`,
+          UsersService.name,
+        );
         throw new InternalServerErrorException('Internal server error');
       }
     }
