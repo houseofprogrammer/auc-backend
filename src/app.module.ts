@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Users } from './entities/users.entity';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
@@ -23,8 +22,8 @@ import { AuthModule } from './auth/auth.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [Users],
-        synchronize: true,
+        entities: [],
+        autoLoadEntities: true,
       }),
     }),
     AuthModule,
