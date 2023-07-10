@@ -26,20 +26,20 @@ export class ItemsController {
 
   @Get(':id')
   findOne(@Req() req, @Param('id') id: number): Promise<ResponseData> {
-    return this.itemsService.findOne(req.user.data.id, id);
+    return this.itemsService.findOne(req.user.id, id);
   }
 
   @Post()
   create(@Req() req, @Body() itemData: CreateItemDto): Promise<ResponseData> {
     const data = {
       ...itemData,
-      userId: req.user.data.id,
+      userId: req.user.id,
     };
     return this.itemsService.create(data);
   }
 
   @Patch(':id/publish')
   publish(@Req() req, @Param('id') id: number): Promise<ResponseData> {
-    return this.itemsService.publish(req.user.data.id, id);
+    return this.itemsService.publish(req.user.id, id);
   }
 }

@@ -4,9 +4,11 @@ import {
   PrimaryGeneratedColumn,
   BeforeInsert,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Items } from './items.entity';
+import { Wallets } from './wallets.entity';
 
 @Entity()
 export class Users {
@@ -26,4 +28,7 @@ export class Users {
 
   @OneToMany(() => Items, (item) => item.user)
   items: Items[];
+
+  @OneToOne(() => Wallets, (wallet) => wallet.user)
+  wallet: Wallets;
 }
