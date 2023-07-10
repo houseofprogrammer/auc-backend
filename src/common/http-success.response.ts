@@ -1,6 +1,15 @@
 import { HttpStatus } from '@nestjs/common';
 
-export function GenericSuccessResponse(data: any, status = HttpStatus.OK) {
+export interface ResponseData {
+  status: HttpStatus;
+  error: boolean;
+  data: any;
+}
+
+export function GenericSuccessResponse(
+  data: any,
+  status = HttpStatus.OK,
+): ResponseData {
   return {
     status: status,
     error: false,
