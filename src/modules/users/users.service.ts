@@ -8,18 +8,21 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from 'src/entities/users.entity';
-import { QueryFailedError, Repository } from 'typeorm';
+import { DataSource, QueryFailedError, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/createUser.dto';
 import {
   GenericSuccessResponse,
   ResponseData,
 } from 'src/common/http-success.response';
+import { WalletsService } from '../wallets/wallets.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(Users) private userRepo: Repository<Users>,
     private readonly logger: Logger,
+    private readonly walletsService: WalletsService,
+    private dataSource: DataSource,
   ) {}
 
   async findOne(id: number): Promise<ResponseData> {
@@ -40,12 +43,21 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<ResponseData> {
-    try {
-      const user = await this.userRepo.create(createUserDto);
-      await this.userRepo.save(user);
+    const queryRunner = this.dataSource.createQueryRunner();
 
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const user = this.userRepo.create(createUserDto);
+      await this.userRepo.save(user);
+      await this.walletsService.create(user.id, queryRunner.manager);
+
+      await queryRunner.commitTransaction();
       return GenericSuccessResponse(user, HttpStatus.CREATED);
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+
       if (
         error instanceof QueryFailedError &&
         error.message.includes('duplicate key value')
@@ -62,6 +74,8 @@ export class UsersService {
         );
         throw new InternalServerErrorException('Internal server error');
       }
+    } finally {
+      await queryRunner.release();
     }
   }
 }

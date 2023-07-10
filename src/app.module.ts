@@ -8,6 +8,7 @@ import { HttpExceptionFilter } from './common/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { ItemsModule } from './modules/items/items.module';
+import { WalletsModule } from './modules/wallets/wallets.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ItemsModule } from './modules/items/items.module';
     }),
     AuthModule,
     ItemsModule,
+    WalletsModule,
   ],
   controllers: [AppController],
   providers: [
