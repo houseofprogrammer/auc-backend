@@ -13,9 +13,10 @@ import { Items } from 'src/entities/items.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { ResponseData } from 'src/common/http-success.response';
 import { CreateItemDto } from './dto/items.dto';
+import { ApiBody } from '@nestjs/swagger';
 
 @UseGuards(AuthGuard('jwt'))
-@Controller('items')
+@Controller('api/v1/items')
 export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
@@ -36,6 +37,7 @@ export class ItemsController {
     return this.itemsService.getItemByStatus(status);
   }
 
+  @ApiBody({ type: CreateItemDto })
   @Post()
   create(@Req() req, @Body() itemData: CreateItemDto): Promise<ResponseData> {
     const data = {

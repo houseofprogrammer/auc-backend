@@ -11,9 +11,10 @@ import { AuthGuard } from '@nestjs/passport';
 import { ResponseData } from 'src/common/http-success.response';
 import { WalletsService } from './wallets.service';
 import { WalleteDto } from './dto/wallet.dto';
+import { ApiBody } from '@nestjs/swagger';
 
 @UseGuards(AuthGuard('jwt'))
-@Controller('wallets')
+@Controller('api/v1/wallets')
 export class WalletsController {
   constructor(private readonly walletService: WalletsService) {}
 
@@ -22,6 +23,7 @@ export class WalletsController {
     return this.walletService.getBalance(req.user.id);
   }
 
+  @ApiBody({ type: WalleteDto })
   @Post('/topup')
   topupWallet(
     @Req() req,
@@ -30,6 +32,7 @@ export class WalletsController {
     return this.walletService.topupWallet(req.user.id, walleteDto.amount);
   }
 
+  @ApiBody({ type: WalleteDto })
   @Put('/withdraw')
   withdrawBalance(
     @Req() req,

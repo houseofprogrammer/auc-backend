@@ -12,12 +12,14 @@ import { CreateBidDto, UpdateBidDto } from './dto/bids.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { BidsService } from './bids.service';
 import { ResponseData } from 'src/common/http-success.response';
+import { ApiBody } from '@nestjs/swagger';
 
 @UseGuards(AuthGuard('jwt'))
-@Controller('bids')
+@Controller('api/v1/bids')
 export class BidsController {
   constructor(private readonly bidsService: BidsService) {}
 
+  @ApiBody({ type: CreateBidDto })
   @Post()
   create(
     @Req() req,
@@ -31,6 +33,7 @@ export class BidsController {
     return this.bidsService.getHighestBidForItem(itemId);
   }
 
+  @ApiBody({ type: UpdateBidDto })
   @Put(':itemId/increase-bid')
   async increaseBid(
     @Req() req,
