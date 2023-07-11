@@ -6,8 +6,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Users } from './users.entity';
+import { Bids } from './bids.entity';
 
 @Entity()
 export class Items {
@@ -42,4 +44,7 @@ export class Items {
 
   @UpdateDateColumn({ name: 'updated_at', select: false })
   updatedAt: Date;
+
+  @OneToMany(() => Bids, (bid) => bid.item)
+  bids: Bids[];
 }
