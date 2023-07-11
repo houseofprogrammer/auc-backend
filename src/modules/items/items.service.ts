@@ -87,6 +87,12 @@ export class ItemsService {
 
     item.status = 'published';
 
-    return GenericSuccessResponse(item, HttpStatus.OK);
+    try {
+      await this.itemsRepository.save(item);
+      return GenericSuccessResponse(item, HttpStatus.OK);
+    } catch (error) {
+      this.logger.error(`Something wrong: ${error.message}`, ItemsService.name);
+      throw new InternalServerErrorException('Internal server error');
+    }
   }
 }

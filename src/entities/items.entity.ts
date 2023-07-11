@@ -22,7 +22,7 @@ export class Items {
   @Column('text')
   description: string;
 
-  @Column('int', { name: 'starting_price' })
+  @Column({ name: 'starting_price', type: 'float', default: 0 })
   startingPrice: number;
 
   @Column('int', { name: 'user_id' })

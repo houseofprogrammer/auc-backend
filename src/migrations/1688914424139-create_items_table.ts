@@ -28,8 +28,8 @@ export class CreateItemsTable1688914424139 implements MigrationInterface {
           },
           {
             name: 'starting_price',
-            type: 'integer',
-            isNullable: false,
+            type: 'float',
+            default: 0,
           },
           {
             name: 'status',
