@@ -32,11 +32,11 @@ export class BidsController {
   }
 
   @Put(':itemId/update-bid')
-  async update(
+  async increaseBid(
     @Req() req,
     @Param('itemId') itemId: number,
     @Body() updateBidDto: UpdateBidDto,
   ) {
-    return this.bidsService.update(req.user.id, itemId, updateBidDto);
+    return this.bidsService.increaseBid(req.user.id, itemId, updateBidDto);
   }
 }

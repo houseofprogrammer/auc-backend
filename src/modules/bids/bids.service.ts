@@ -8,13 +8,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Bids } from 'src/entities/bids.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateBidDto, UpdateBidDto } from './dto/bids.dto';
 import { Items } from 'src/entities/items.entity';
 import {
   GenericSuccessResponse,
   ResponseData,
 } from 'src/common/http-success.response';
+import { Wallets } from 'src/entities/wallets.entity';
 
 @Injectable()
 export class BidsService {
@@ -25,7 +26,11 @@ export class BidsService {
     @InjectRepository(Items)
     private itemsRepository: Repository<Items>,
 
+    @InjectRepository(Wallets)
+    private walletsRepository: Repository<Wallets>,
+
     private readonly logger: Logger,
+    private dataSource: DataSource,
   ) {}
 
   async create(
@@ -52,6 +57,16 @@ export class BidsService {
       );
     }
 
+    const userWallet = await this.walletsRepository.findOne({
+      where: { userId: userId },
+    });
+    if (!userWallet) {
+      throw new NotFoundException('User not found');
+    }
+    if (userWallet.balance < createBidDto.amount) {
+      throw new BadRequestException('Insufficient balance, please deposit');
+    }
+
     const highestBid = await this.bidsRepository
       .createQueryBuilder('bids')
       .select('MAX(bids.amount)', 'maxAmount')
@@ -64,6 +79,11 @@ export class BidsService {
       );
     }
 
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     const bid = this.bidsRepository.create({
       userId: userId,
       itemId: item.id,
@@ -71,11 +91,20 @@ export class BidsService {
     });
 
     try {
-      await this.bidsRepository.save(bid);
+      await queryRunner.manager.save(bid);
+
+      userWallet.balance -= createBidDto.amount;
+      await queryRunner.manager.save(userWallet);
+
+      await queryRunner.commitTransaction();
       return GenericSuccessResponse(bid, HttpStatus.OK);
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+
       this.logger.error(`Something wrong: ${error.message}`, BidsService.name);
       throw new InternalServerErrorException('Internal server error');
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -98,7 +127,7 @@ export class BidsService {
     }
   }
 
-  async update(
+  async increaseBid(
     userId: number,
     itemId: number,
     updateBidDto: UpdateBidDto,
@@ -131,6 +160,16 @@ export class BidsService {
       );
     }
 
+    const userWallet = await this.walletsRepository.findOne({
+      where: { userId: userId },
+    });
+    if (!userWallet) {
+      throw new NotFoundException('User not found');
+    }
+    if (userWallet.balance < updateBidDto.amount) {
+      throw new BadRequestException('Insufficient balance, please deposit');
+    }
+
     const highestBid = await this.bidsRepository
       .createQueryBuilder('bids')
       .select('MAX(bids.amount)', 'maxAmount')
@@ -145,12 +184,26 @@ export class BidsService {
 
     bid.amount = updateBidDto.amount;
 
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      await this.bidsRepository.save(bid);
+      await queryRunner.manager.save(bid);
+
+      userWallet.balance -= updateBidDto.amount;
+      await queryRunner.manager.save(userWallet);
+
+      await queryRunner.commitTransaction();
       return GenericSuccessResponse(bid, HttpStatus.OK);
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+
       this.logger.error(`Something wrong: ${error.message}`, BidsService.name);
       throw new InternalServerErrorException('Internal server error');
+    } finally {
+      await queryRunner.release();
     }
   }
 }
