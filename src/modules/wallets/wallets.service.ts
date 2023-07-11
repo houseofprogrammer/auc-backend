@@ -36,7 +36,7 @@ export class WalletsService {
       throw new UnauthorizedException();
     }
 
-    return GenericSuccessResponse(wallet.balance, HttpStatus.OK);
+    return GenericSuccessResponse({ balance: wallet.balance }, HttpStatus.OK);
   }
 
   async topupWallet(userId: number, amount: number): Promise<ResponseData> {

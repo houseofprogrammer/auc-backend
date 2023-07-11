@@ -31,7 +31,7 @@ export class BidsController {
     return this.bidsService.getHighestBidForItem(itemId);
   }
 
-  @Put(':itemId/update-bid')
+  @Put(':itemId/increase-bid')
   async increaseBid(
     @Req() req,
     @Param('itemId') itemId: number,

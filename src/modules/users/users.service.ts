@@ -54,7 +54,9 @@ export class UsersService {
       await this.walletsService.create(user.id, queryRunner.manager);
 
       await queryRunner.commitTransaction();
-      return GenericSuccessResponse(user, HttpStatus.CREATED);
+
+      const { password, ...result } = user;
+      return GenericSuccessResponse(result, HttpStatus.CREATED);
     } catch (error) {
       await queryRunner.rollbackTransaction();
 

@@ -37,50 +37,15 @@ export class BidsService {
     userId: number,
     createBidDto: CreateBidDto,
   ): Promise<ResponseData> {
-    const item = await this.itemsRepository.findOne({
-      where: { id: createBidDto.itemId },
-    });
+    const item = await this.validateItem(
+      createBidDto.itemId,
+      createBidDto.amount,
+    );
+    const userWallet = await this.validateWallet(userId, createBidDto.amount);
 
-    if (!item) {
-      throw new NotFoundException('Item not found');
-    }
-
-    if (item.status !== 'published') {
-      throw new BadRequestException(
-        'Cannot bid on an item that is not published',
-      );
-    }
-
-    if (createBidDto.amount <= item.startingPrice) {
-      throw new BadRequestException(
-        'Bid price must be higher than the starting price',
-      );
-    }
-
-    const userWallet = await this.walletsRepository.findOne({
-      where: { userId: userId },
-    });
-    if (!userWallet) {
-      throw new NotFoundException('User not found');
-    }
-    if (userWallet.balance < createBidDto.amount) {
-      throw new BadRequestException('Insufficient balance, please deposit');
-    }
-
-    const highestBid = await this.bidsRepository
-      .createQueryBuilder('bids')
-      .select('MAX(bids.amount)', 'maxAmount')
-      .where('bids.item_id = :itemId', { itemId: item.id })
-      .getRawOne();
-
-    if (highestBid && highestBid.maxAmount >= createBidDto.amount) {
-      throw new BadRequestException(
-        'Bid amount must be higher than current highest bid',
-      );
-    }
+    await this.validateHighestBid(createBidDto.itemId, createBidDto.amount);
 
     const queryRunner = this.dataSource.createQueryRunner();
-
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -95,8 +60,8 @@ export class BidsService {
 
       userWallet.balance -= createBidDto.amount;
       await queryRunner.manager.save(userWallet);
-
       await queryRunner.commitTransaction();
+
       return GenericSuccessResponse(bid, HttpStatus.OK);
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -132,6 +97,43 @@ export class BidsService {
     itemId: number,
     updateBidDto: UpdateBidDto,
   ): Promise<ResponseData> {
+    await this.validateItem(itemId, updateBidDto.amount);
+    const userWallet = await this.validateWallet(userId, updateBidDto.amount);
+
+    const bid = await this.bidsRepository.findOne({
+      where: { userId: userId, itemId: itemId },
+    });
+
+    if (!bid) {
+      throw new NotFoundException('Bid not found');
+    }
+    bid.amount = updateBidDto.amount;
+
+    await this.validateHighestBid(itemId, updateBidDto.amount);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.save(bid);
+
+      userWallet.balance -= updateBidDto.amount;
+      await queryRunner.manager.save(userWallet);
+      await queryRunner.commitTransaction();
+
+      return GenericSuccessResponse(bid, HttpStatus.OK);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      this.logger.error(`Something wrong: ${error.message}`, BidsService.name);
+      throw new InternalServerErrorException('Internal server error');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  private async validateItem(itemId: number, amount: number): Promise<Items> {
     const item = await this.itemsRepository.findOne({
       where: { id: itemId },
     });
@@ -142,68 +144,52 @@ export class BidsService {
 
     if (item.status !== 'published') {
       throw new BadRequestException(
-        'Cannot update bid on an item that is not published',
+        'Cannot bid on an item that is not published',
       );
     }
 
-    const bid = await this.bidsRepository.findOne({
-      where: { userId: userId, itemId: itemId },
-    });
-
-    if (!bid) {
-      throw new NotFoundException('Bid not found');
-    }
-
-    if (updateBidDto.amount <= item.startingPrice) {
+    if (amount <= item.startingPrice) {
       throw new BadRequestException(
         'Bid price must be higher than the starting price',
       );
     }
 
+    return item;
+  }
+
+  private async validateWallet(
+    userId: number,
+    amount: number,
+  ): Promise<Wallets> {
     const userWallet = await this.walletsRepository.findOne({
       where: { userId: userId },
     });
+
     if (!userWallet) {
       throw new NotFoundException('User not found');
     }
-    if (userWallet.balance < updateBidDto.amount) {
+
+    if (userWallet.balance < amount) {
       throw new BadRequestException('Insufficient balance, please deposit');
     }
 
+    return userWallet;
+  }
+
+  private async validateHighestBid(
+    itemId: number,
+    amount: number,
+  ): Promise<void> {
     const highestBid = await this.bidsRepository
       .createQueryBuilder('bids')
       .select('MAX(bids.amount)', 'maxAmount')
       .where('bids.item_id = :itemId', { itemId: itemId })
       .getRawOne();
 
-    if (highestBid && highestBid.maxAmount >= updateBidDto.amount) {
+    if (highestBid && highestBid.maxAmount >= amount) {
       throw new BadRequestException(
         'Bid amount must be higher than current highest bid',
       );
-    }
-
-    bid.amount = updateBidDto.amount;
-
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      await queryRunner.manager.save(bid);
-
-      userWallet.balance -= updateBidDto.amount;
-      await queryRunner.manager.save(userWallet);
-
-      await queryRunner.commitTransaction();
-      return GenericSuccessResponse(bid, HttpStatus.OK);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      this.logger.error(`Something wrong: ${error.message}`, BidsService.name);
-      throw new InternalServerErrorException('Internal server error');
-    } finally {
-      await queryRunner.release();
     }
   }
 }
