@@ -95,4 +95,24 @@ export class ItemsService {
       throw new InternalServerErrorException('Internal server error');
     }
   }
+
+  async getItemByStatus(
+    status: 'published' | 'completed',
+  ): Promise<ResponseData> {
+    try {
+      const items = await this.itemsRepository.find({ where: { status } });
+      if (!items.length) {
+        throw new NotFoundException('Item not found');
+      }
+
+      return GenericSuccessResponse(items, HttpStatus.OK);
+    } catch (error) {
+      this.logger.error(`Something wrong: ${error.message}`, ItemsService.name);
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException('Internal server error');
+      }
+    }
+  }
 }

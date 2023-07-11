@@ -29,6 +29,13 @@ export class ItemsController {
     return this.itemsService.findOne(req.user.id, id);
   }
 
+  @Get('/status/:status')
+  getItemsByStatus(
+    @Param('status') status: 'published' | 'completed',
+  ): Promise<ResponseData> {
+    return this.itemsService.getItemByStatus(status);
+  }
+
   @Post()
   create(@Req() req, @Body() itemData: CreateItemDto): Promise<ResponseData> {
     const data = {
