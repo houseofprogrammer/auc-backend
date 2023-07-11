@@ -26,7 +26,8 @@ export class CreateBidsTable1689047877872 implements MigrationInterface {
           },
           {
             name: 'amount',
-            type: 'integer',
+            type: 'float',
+            default: 0,
           },
           {
             name: 'bid_time',

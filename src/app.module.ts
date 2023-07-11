@@ -9,6 +9,8 @@ import { APP_FILTER } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { ItemsModule } from './modules/items/items.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
+import { BidsService } from './modules/bids/bids.service';
+import { BidsModule } from './modules/bids/bids.module';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { WalletsModule } from './modules/wallets/wallets.module';
     AuthModule,
     ItemsModule,
     WalletsModule,
+    BidsModule,
   ],
   controllers: [AppController],
   providers: [

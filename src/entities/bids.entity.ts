@@ -13,16 +13,20 @@ export class Bids {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: number;
 
-  @Column()
+  @Column({ name: 'item_id' })
   itemId: number;
 
-  @Column()
-  bidAmount: number;
+  @Column({ type: 'float', default: 0 })
+  amount: number;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    name: 'bid_time',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   bidTime: Date;
 
   @ManyToOne(() => Users, (user) => user.bids)
