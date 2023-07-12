@@ -47,4 +47,13 @@ export class Items {
 
   @OneToMany(() => Bids, (bid) => bid.item)
   bids: Bids[];
+
+  @Column('int', { name: 'time_window' })
+  timeWindow: number;
+
+  @CreateDateColumn({ name: 'end_bid_time' })
+  endBidtime: Date;
+
+  @Column('int', { name: 'winner_user_id' })
+  winnerUserId: number;
 }
