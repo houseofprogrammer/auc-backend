@@ -16,6 +16,8 @@ import {
   ResponseData,
 } from 'src/common/http-success.response';
 import { Wallets } from 'src/entities/wallets.entity';
+import { RedisStore } from 'src/storage/redis-store';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class BidsService {
@@ -30,7 +32,9 @@ export class BidsService {
     private walletsRepository: Repository<Wallets>,
 
     private readonly logger: Logger,
-    private dataSource: DataSource,
+    private readonly dataSource: DataSource,
+    private readonly redisStore: RedisStore,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(
@@ -41,6 +45,16 @@ export class BidsService {
       createBidDto.itemId,
       createBidDto.amount,
     );
+    const lastBidTime = await this.getLastBidTime(userId);
+    const now = Date.now();
+    const minBidTime = this.configService.get<number>('MINIMUM_BID_TIME', 5000);
+
+    if (lastBidTime && now - lastBidTime < minBidTime) {
+      throw new BadRequestException(
+        'Please wait a moment before bidding again',
+      );
+    }
+
     const userWallet = await this.validateWallet(userId, createBidDto.amount);
 
     await this.validateHighestBid(createBidDto.itemId, createBidDto.amount);
@@ -61,6 +75,8 @@ export class BidsService {
       userWallet.balance -= createBidDto.amount;
       await queryRunner.manager.save(userWallet);
       await queryRunner.commitTransaction();
+
+      await this.setLastBidTime(userId, now);
 
       return GenericSuccessResponse(bid, HttpStatus.OK);
     } catch (error) {
@@ -97,6 +113,16 @@ export class BidsService {
     itemId: number,
     updateBidDto: UpdateBidDto,
   ): Promise<ResponseData> {
+    const lastBidTime = await this.getLastBidTime(userId);
+    const now = Date.now();
+    const minBidTime = this.configService.get<number>('MINIMUM_BID_TIME', 5000);
+
+    if (lastBidTime && now - lastBidTime < minBidTime) {
+      throw new BadRequestException(
+        'Please wait a moment before bidding again',
+      );
+    }
+
     await this.validateItem(itemId, updateBidDto.amount);
     const userWallet = await this.validateWallet(userId, updateBidDto.amount);
 
@@ -191,5 +217,18 @@ export class BidsService {
         'Bid amount must be higher than current highest bid',
       );
     }
+  }
+
+  private async setLastBidTime(userId: number, time: number): Promise<void> {
+    await this.redisStore
+      .getClient()
+      .set(`lastBidTime:${userId}`, time.toString());
+  }
+
+  async getLastBidTime(userId: number): Promise<number | null> {
+    const lastBidTime = await this.redisStore
+      .getClient()
+      .get(`lastBidTime:${userId}`);
+    return lastBidTime ? parseInt(lastBidTime) : null;
   }
 }
