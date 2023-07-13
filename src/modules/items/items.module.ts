@@ -4,10 +4,17 @@ import { Items } from 'src/entities/items.entity';
 import { ItemsService } from './items.service';
 import { ItemsController } from './items.controller';
 import { Users } from 'src/entities/users.entity';
-import { UsersModule } from '../users/users.module';
+import { BullModule } from '@nestjs/bull';
+import { WalletsModule } from '../wallets/wallets.module';
 
 @Module({
-  imports: [UsersModule, TypeOrmModule.forFeature([Items, Users])],
+  imports: [
+    TypeOrmModule.forFeature([Items, Users]),
+    BullModule.registerQueue({
+      name: 'auctions',
+    }),
+    WalletsModule,
+  ],
   providers: [ItemsService, Logger],
   controllers: [ItemsController],
   exports: [ItemsService],

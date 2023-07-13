@@ -9,8 +9,9 @@ import { APP_FILTER } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { ItemsModule } from './modules/items/items.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
-import { BidsService } from './modules/bids/bids.service';
 import { BidsModule } from './modules/bids/bids.module';
+import { BullModule } from '@nestjs/bull';
+import { AuctionsConsumer } from './modules/items/item-bids.consumer';
 
 @Module({
   imports: [
@@ -34,6 +35,19 @@ import { BidsModule } from './modules/bids/bids.module';
     ItemsModule,
     WalletsModule,
     BidsModule,
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        redis: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: configService.get<number>('REDIS_PORT'),
+        },
+      }),
+    }),
+    BullModule.registerQueue({
+      name: 'auctions',
+    }),
   ],
   controllers: [AppController],
   providers: [
@@ -42,6 +56,7 @@ import { BidsModule } from './modules/bids/bids.module';
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
+    AuctionsConsumer,
   ],
 })
 export class AppModule {}

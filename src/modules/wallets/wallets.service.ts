@@ -111,4 +111,33 @@ export class WalletsService {
       throw new InternalServerErrorException('Internal server error');
     }
   }
+
+  async refundBalance(
+    userId: number,
+    amount: number,
+    manager: EntityManager,
+  ): Promise<void> {
+    const wallet = await this.walletRepository.findOne({
+      where: { userId: userId },
+    });
+    this.logger.log(
+      `[refundLosingBids] started refund the bids to wallet id: ${wallet.id}`,
+    );
+
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+
+    wallet.balance += amount;
+
+    try {
+      await manager.save(wallet);
+    } catch (error) {
+      this.logger.error(
+        `Something wrong: ${error.message}`,
+        WalletsService.name,
+      );
+      throw new InternalServerErrorException('Internal server error');
+    }
+  }
 }

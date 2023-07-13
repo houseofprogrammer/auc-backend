@@ -17,6 +17,11 @@ export class CreateItemDto {
   @IsInt()
   @ApiProperty()
   startingPrice: number;
+
+  @IsNotEmpty()
+  @IsInt()
+  @ApiProperty()
+  timeWindow: number;
 }
 
 export class UpdateItemDto extends PartialType(CreateItemDto) {
