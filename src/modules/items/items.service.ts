@@ -33,8 +33,16 @@ export class ItemsService {
     private auctionQueue: Queue,
   ) {}
 
-  findAll(): Promise<Items[]> {
-    return this.itemsRepository.find();
+  async findAll(userId: number): Promise<ResponseData> {
+    const items = await this.itemsRepository.find({
+      where: { userId: userId },
+    });
+
+    if (items.length < 0) {
+      throw new NotFoundException('Item not found');
+    }
+
+    return GenericSuccessResponse(items, HttpStatus.OK);
   }
 
   async findOne(userId: number, id: number): Promise<ResponseData> {

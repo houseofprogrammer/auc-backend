@@ -21,8 +21,8 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   @Get()
-  findAll(): Promise<Items[]> {
-    return this.itemsService.findAll();
+  findAll(@Req() req): Promise<ResponseData> {
+    return this.itemsService.findAll(req.user.id);
   }
 
   @Get(':id')
