@@ -1,73 +1,115 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Auc-Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+AUC-Backend is a backend system for an auction or bidding platform. It is built using NestJS, TypeScript, TypeORM, PostgreSQL, Redis, and NestJS/Bull for queueing and background jobs.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## About
 
-## Description
+This application allows users to register and log in to the system. Once logged in, users can create items for auction. Each item has a starting price, a time window for how long the auction lasts, and a status. When an item is first created, its status is 'draft'. The user can then publish the item when they are ready for it to be auctioned.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+To make a bid, users must first deposit money into their account. There is a validation check to ensure that the user's balance is greater than the bid price. Users can only bid on items that have been published. After making a bid on an item, users can make another bid after 5 seconds. Each bid deducts the bid amount from the user's balance.
 
-## Installation
+Users can view items that have completed auctions with the status 'completed' or items with the status 'published' which are ready for bids. Bids can only be made within the item's time window.
 
-```bash
-$ yarn install
+When the time window for bids ends, the system will find the highest bid and declare that user as the winner. The system will then refund the deducted money to the users who did not win the bid.
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant AuctionSystem
+  participant Database
+
+  User->>AuctionSystem: Registration and Authentication
+  User->>AuctionSystem: Create Item
+  AuctionSystem-->>Database: Save Item Data as "Draft"
+  User->>AuctionSystem: Publish Item
+  AuctionSystem-->>Database: Update Item Status to "Published"
+  User->>AuctionSystem: Top Up Wallet
+  AuctionSystem-->>Database: Update User Balance
+  loop Auction In Progress
+    User->>AuctionSystem: Make a Bid
+    AuctionSystem->>AuctionSystem: Validate Sufficient Balance
+    AuctionSystem-->>Database: Save Bid Data
+    AuctionSystem-->>Database: Update Highest Bid for Item
+    AuctionSystem-->>User: Confirm Successful Bid
+    alt Auction Time Ends
+      AuctionSystem-->>Database: Check Highest and Failed Bids
+      alt There is a Qualifying Highest Bid
+        AuctionSystem-->>Database: Update Item Status to "Completed"
+        AuctionSystem-->>User: Confirm Auction Win
+      else No Qualifying Highest Bid
+        AuctionSystem-->>Database: Refund User Balance for Bidders
+        AuctionSystem-->>User: Confirm Auction Failure
+      end
+    end
+    opt Next Auction Process
+      AuctionSystem-->>Database: Check Next Item for Auction
+    end
+    User->>AuctionSystem: View List of Completed Items
+  end
 ```
 
-## Running the app
+## Getting Started
 
-```bash
-# development
-$ yarn run start
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-# watch mode
-$ yarn run start:dev
+### Prerequisites
 
-# production mode
-$ yarn run start:prod
+- Node.js
+- PostgreSQL
+- Redis
+- Docker (optional)
+
+### Installation (manual)
+
+1. Clone the repo
+
+```sh
+  git clone https://github.com/muhammadtaufan/auc-backend.git
 ```
 
-## Test
+2. Install Yarn packages
 
-```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+```sh
+  yarn install
 ```
 
-## Support
+3. Copy the `.env.example` file and create a new `.env` file with your own configurations.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+4. Run the migrations
 
-## Stay in touch
+```sh
+  yarn run migration:run
+```
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+1. Start the server
 
-## License
+```bash
+  # development
+  yarn run start
 
-Nest is [MIT licensed](LICENSE).
+  # watch mode
+  yarn run start:dev
+
+  # production mode
+  yarn run start:prod
+  ```
+
+### Using Docker
+
+1. Build the Docker image
+
+```sh
+  docker-compose build
+ ```
+
+2. Run the Docker container
+
+```sh
+  docker-compose up
+```
+
+## Contact
+
+Your Name - <mtaufan.dev@gmail.com>
+
+Project Link: [https://github.com/muhammadtaufan/auc-backend](https://github.com/muhammadtaufan/auc-backend)
