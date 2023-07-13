@@ -11,7 +11,7 @@ import {
 import { CreateBidDto, UpdateBidDto } from './dto/bids.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { BidsService } from './bids.service';
-import { ResponseData } from 'src/common/http-success.response';
+import { ResponseData } from 'src/commons/http-success.response';
 import { ApiBody } from '@nestjs/swagger';
 
 @UseGuards(AuthGuard('jwt'))

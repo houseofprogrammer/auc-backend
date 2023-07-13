@@ -7,16 +7,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Bids } from 'src/entities/bids.entity';
+import { Bids } from 'src/modules/bids/bids.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateBidDto, UpdateBidDto } from './dto/bids.dto';
-import { Items } from 'src/entities/items.entity';
+import { Items } from 'src/modules/items/items.entity';
 import {
   GenericSuccessResponse,
   ResponseData,
-} from 'src/common/http-success.response';
-import { Wallets } from 'src/entities/wallets.entity';
-import { RedisStore } from 'src/storage/redis-store';
+} from 'src/commons/http-success.response';
+import { Wallets } from 'src/modules/wallets/wallets.entity';
+import { RedisStore } from 'src/storages/redis-store';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

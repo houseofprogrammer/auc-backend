@@ -7,9 +7,9 @@ import {
   OneToOne,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { Items } from './items.entity';
-import { Wallets } from './wallets.entity';
-import { Bids } from './bids.entity';
+import { Items } from '../items/items.entity';
+import { Wallets } from '../wallets/wallets.entity';
+import { Bids } from '../bids/bids.entity';
 
 @Entity()
 export class Users {

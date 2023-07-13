@@ -7,13 +7,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Users } from 'src/entities/users.entity';
+import { Users } from 'src/modules/users/users.entity';
 import { DataSource, QueryFailedError, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/createUser.dto';
 import {
   GenericSuccessResponse,
   ResponseData,
-} from 'src/common/http-success.response';
+} from 'src/commons/http-success.response';
 import { WalletsService } from '../wallets/wallets.service';
 
 @Injectable()

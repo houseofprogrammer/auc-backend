@@ -5,8 +5,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Users } from './users.entity';
-import { Items } from './items.entity';
+import { Users } from '../users/users.entity';
+import { Items } from '../items/items.entity';
 
 @Entity()
 export class Bids {

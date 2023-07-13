@@ -11,8 +11,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   GenericSuccessResponse,
   ResponseData,
-} from 'src/common/http-success.response';
-import { Items } from 'src/entities/items.entity';
+} from 'src/commons/http-success.response';
+import { Items } from 'src/modules/items/items.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateItemDto } from './dto/items.dto';
 import { InjectQueue } from '@nestjs/bull';

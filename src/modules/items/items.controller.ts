@@ -9,9 +9,9 @@ import {
   Req,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
-import { Items } from 'src/entities/items.entity';
+import { Items } from 'src/modules/items/items.entity';
 import { AuthGuard } from '@nestjs/passport';
-import { ResponseData } from 'src/common/http-success.response';
+import { ResponseData } from 'src/commons/http-success.response';
 import { CreateItemDto } from './dto/items.dto';
 import { ApiBody } from '@nestjs/swagger';
 

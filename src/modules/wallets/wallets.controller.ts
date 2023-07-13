@@ -8,7 +8,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ResponseData } from 'src/common/http-success.response';
+import { ResponseData } from 'src/commons/http-success.response';
 import { WalletsService } from './wallets.service';
 import { WalleteDto } from './dto/wallet.dto';
 import { ApiBody } from '@nestjs/swagger';

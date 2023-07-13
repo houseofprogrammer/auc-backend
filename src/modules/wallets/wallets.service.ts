@@ -11,8 +11,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   GenericSuccessResponse,
   ResponseData,
-} from 'src/common/http-success.response';
-import { Wallets } from 'src/entities/wallets.entity';
+} from 'src/commons/http-success.response';
+import { Wallets } from 'src/modules/wallets/wallets.entity';
 import { EntityManager, Repository } from 'typeorm';
 
 @Injectable()
